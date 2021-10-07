@@ -1,13 +1,13 @@
 package s7comm
 
 import (
-	"time"
-    "strconv"
-	"strings"
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/config"
 	"github.com/influxdata/telegraf/plugins/inputs"
 	"github.com/robinson/gos7"
+	"time"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -44,8 +44,6 @@ type S7Comm struct {
 	
 	PollInterval config.Duration `toml:"poll_interval"`
 	PollingDisabled bool `toml:"poll_interval_disabled"`
-    TicksPerInterval int64
-	TickCount int64
 	
 	Nodes []NodeSettings  `toml:"nodes"`
 	Log   telegraf.Logger `toml:"-"`
@@ -82,7 +80,7 @@ func (s *S7Comm) Connect() error {
 
 	s.client = gos7.NewClient(s.handler)
 
-	//s.Log.Info("Connection successfull")
+	s.Log.Info("Connection successfull")
 
 	return nil
 }
@@ -92,47 +90,16 @@ func (s *S7Comm) Stop() error {
 	return err
 }
 
-func (s *S7Comm) Init() error {
-	if s.PollingDisabled {
-		s.TicksPerInterval = 1
-	
-	} else{
-		s.TicksPerInterval = int64(s.PollInterval) / int64(10 * time.Millisecond)
-	}
-	
+func (s *S7Comm) Init() error {	
 	err := s.Connect()
 	return err
 }
 
 func (s *S7Comm) SampleConfig() string {
-	return `
-  	## Generates random numbers
-		[[inputs.s7comm]]
-		# name = "S7300"
-		# plc_ip = "192.168.10.57"
-		# plc_rack = 1
-		# plc_slot = 2
-		# connect_timeout = 10s
-		# request_timeout = 2s
-		# nodes = [{name= "DB1.DBW0", type = "int"}, 
-        # {name= "DB1.DBD2", type = "real"},
-        # {name= "DB1.DBD6", type = "real"}, 
-        # {name= "DB1.DBX10.0", type = "bool"}, 
-        # {name= "DB1.DBD12", type = "dint"}, 
-        # {name= "DB1.DBW16", type = "uint"}, 
-        # {name= "DB1.DBD18", type = "udint"}, 
-        # {name= "DB1.DBD22", type = "time"}]
-`
+	return ``
 }
 
-func (s *S7Comm) Gather(a telegraf.Accumulator) error {
-	if s.TickCount == s.TicksPerInterval{
-		s.TickCount = 0
-	} else{
-		s.TickCount++
-		return nil
-	}
-	
+func (s *S7Comm) Gather(a telegraf.Accumulator) error {	
 	var metrics []Metrics
 	//Determine number of unique metrics
 	for _, node := range s.Nodes {
@@ -143,7 +110,6 @@ func (s *S7Comm) Gather(a telegraf.Accumulator) error {
 				found = true
 				metrics[j].Count++
 				metrics[j].Nodes = append(metrics[j].Nodes,node)
-				
 				break out
 			}
 		}
@@ -334,15 +300,5 @@ func (s *S7Comm) Description() string {
 
 // Add this plugin to telegraf
 func init() {
-	inputs.Add("s7comm", func() telegraf.Input {
-		return &S7Comm{
-			MetricName:  "s7comm",
-			Endpoint:    "192.168.10.57",
-			Rack:        0,
-			Slot:        1,
-			Timeout:     config.Duration(5 * time.Second),
-			IdleTimeout: config.Duration(10 * time.Second),
-			Nodes:       nil,
-		}
-	})
+	inputs.Add("s7comm", func() telegraf.Input { return &S7Comm{} })
 }
