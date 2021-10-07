@@ -1,4 +1,4 @@
-module github.com/nicolasme/s7comm
+module github.com/racquemis/s7comm2
 
 go 1.16
 
